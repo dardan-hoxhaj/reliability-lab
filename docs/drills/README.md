@@ -30,6 +30,8 @@ Dashboard `reliability-lab` after Prometheus scrape:
 - Error budget remaining: 1
 - Pod restarts (15m): 0
 
+![Grafana dashboard](grafana-dashboard.png)
+
 ## Honest gaps
 
 - No Grafana screenshots from these runs.
