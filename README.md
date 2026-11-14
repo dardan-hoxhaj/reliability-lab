@@ -53,7 +53,7 @@ make demo
 | kubeconform | 6/6 valid |
 | terraform validate | success |
 | drills | pod kill 6s, bad deploy 45s, load 100/100 at 2-8ms (2026-11-14) |
-| image size | not measured (no Docker here) |
+| image size | 218MB (`reliability-lab:local`, 2026-11-14) |
 | AWS | not applied |
 
 ## Limitations
@@ -61,7 +61,7 @@ make demo
 - Drills are scripted but not executed. Numbers will be filled in after a laptop run.
 - Terraform is validate-only. No `terraform apply`.
 - kind, not EKS.
-- The architecture PNG is not in this commit.
+- Image is 218MB. A multi-stage build would shrink it; not done in this pass.
 
 ## Cost
 
