@@ -32,7 +32,17 @@ Dashboard `reliability-lab` after Prometheus scrape:
 
 ![Grafana dashboard](grafana-dashboard.png)
 
+## Error-budget burn (alert fired and recovered)
+
+- 00:53 ET: `TARGETS` set to `https://httpbin.org/status/500`. Checks returned `status_500`.
+- 01:10 ET: `ReliabilityErrorBudgetFastBurn` was FIRING in Prometheus (value 1, failure rate over the 5m window).
+- 01:14 ET: `TARGETS` set back to `https://example.com`. Deployment rolled out.
+- 01:19 ET: the same alert was INACTIVE.
+
+![Alert firing](alert-firing.png)
+
+![Alert recovered](alert-recovered.png)
+
 ## Honest gaps
 
-- No Grafana screenshots from these runs.
-- The load drill did not stress the service. Install `hey` and rerun if you want a number that moves the alert.
+- The load test did not fire an alert. A healthy service under load should not. The burn alert was proved with a failing target instead.
