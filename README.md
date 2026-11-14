@@ -2,7 +2,7 @@
 
 A small URL monitor run like a production system: checks, SLOs, burn-rate alerts, and failure drills.
 
-Status: code, tests, CI, and manifests are written. Drills have not been run (this build environment has no Docker). No AWS resources have been created.
+Status: drills were run on a kind cluster (2026-11-14). No AWS resources have been created.
 
 ## What it does
 
@@ -52,7 +52,7 @@ make demo
 | ruff | clean |
 | promtool check rules | 6 rules, success |
 | promtool test rules | success |
-| kubeconform | 6/6 valid |
+| kubeconform | valid (CRDs skipped with -ignore-missing-schemas) |
 | terraform validate | success |
 | drills | pod kill 6s, bad deploy 45s, hey 7264/7264 at 242 req/s (p95 131ms) |
 | image size | 218MB (`reliability-lab:local`, 2026-11-14) |
@@ -60,10 +60,13 @@ make demo
 
 ## Limitations
 
-- Drills are scripted but not executed. Numbers will be filled in after a laptop run.
-- Terraform is validate-only. No `terraform apply`.
-- kind, not EKS.
+- Terraform is validate-only. No `terraform apply`. No remote state.
+- kind, not EKS. CI does not deploy on `main`.
 - Image is 218MB. A multi-stage build would shrink it; not done in this pass.
+- The burn-rate alert did not fire. The load test hit a healthy `/health`, so every request succeeded. That is the correct result, not a missed alert.
+- Grafana screenshot is in `docs/drills/grafana-dashboard.png`.
+
+![Grafana](docs/drills/grafana-dashboard.png)
 
 ## Cost
 

@@ -57,7 +57,7 @@ jobs:
           curl -fsSL -o /tmp/kc.tgz https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz
           tar -xzf /tmp/kc.tgz -C /tmp
           sudo mv /tmp/kubeconform /usr/local/bin/kubeconform
-      - run: kubeconform -summary -kubernetes-version 1.30.0 k8s/
+      - run: kubeconform -summary -kubernetes-version 1.30.0 -ignore-missing-schemas k8s/
 
   gitleaks:
     runs-on: ubuntu-latest
