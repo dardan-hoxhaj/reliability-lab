@@ -23,10 +23,45 @@ spec:
             1 - ((1 - reliability:checks_success_ratio:rate5m) / (1 - 0.995))
     - name: reliability-alerts
       rules:
+        - alert: ReliabilityErrorBudgetFastBurn
+          expr: |
+            (
+              sum(rate(reliability_checks_total{result="failure"}[5m]))
+              / sum(rate(reliability_checks_total[5m]))
+            ) > (14.4 * 0.005)
+            and
+            (
+              sum(rate(reliability_checks_total{result="failure"}[1h]))
+              / sum(rate(reliability_checks_total[1h]))
+            ) > (14.4 * 0.005)
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            summary: "Check success rate is burning the error budget fast"
+            runbook: "docs/RUNBOOK.md#reliabilityerrorbudgetfastburn"
+        - alert: ReliabilityErrorBudgetSlowBurn
+          expr: |
+            (
+              sum(rate(reliability_checks_total{result="failure"}[30m]))
+              / sum(rate(reliability_checks_total[30m]))
+            ) > (6 * 0.005)
+            and
+            (
+              sum(rate(reliability_checks_total{result="failure"}[6h]))
+              / sum(rate(reliability_checks_total[6h]))
+            ) > (6 * 0.005)
+          for: 15m
+          labels:
+            severity: ticket
+          annotations:
+            summary: "Check success rate is burning the error budget slowly"
+            runbook: "docs/RUNBOOK.md#reliabilityerrorbudgetslowburn"
         - alert: ReliabilityPodCrashLoop
           expr: increase(kube_pod_container_status_restarts_total{namespace="reliability-lab"}[15m]) > 3
           for: 5m
           labels:
             severity: page
           annotations:
-            summary: A reliability pod is crash-looping
+            summary: "A reliability pod is crash-looping"
+            runbook: "docs/RUNBOOK.md#reliabilitypodcrashloop"

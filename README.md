@@ -17,13 +17,16 @@ Status: drills were run on a kind cluster (2026-11-14). No AWS resources have be
 
 ```mermaid
 flowchart LR
-  targets[Target URLs] --> checker[Checker loop]
-  checker --> metrics[Prometheus metrics]
-  api[FastAPI /health /ready /metrics /targets] --> metrics
+  subgraph k8s[kind Deployment]
+    subgraph api["FastAPI /health /ready /metrics /targets"]
+      checker[Checker loop]
+    end
+  end
+  checker --> targets[Target URLs]
+  api --> metrics[Prometheus metrics]
   metrics --> prom[Prometheus]
   prom --> grafana[Grafana]
   prom --> alerts[Burn-rate alerts]
-  k8s[kind Deployment] --> api
 ```
 
 ## Quickstart
@@ -66,7 +69,9 @@ make demo
 - The load test did not burn the error budget (all requests succeeded). The burn-rate alert was proven separately with a failing target: ReliabilityErrorBudgetFastBurn fired and recovered (see docs/drills/README.md).
 - Grafana screenshot is in `docs/drills/grafana-dashboard.png`.
 
-![Grafana](docs/drills/grafana-dashboard.png)
+![Alert firing](docs/drills/alert-firing.png)
+
+[Grafana dashboard](docs/drills/grafana-dashboard.png) · [Alert recovered](docs/drills/alert-recovered.png)
 
 ## Cost
 
