@@ -61,3 +61,18 @@ def test_metrics_exposes_check_series():
     assert resp.status_code == 200
     assert "reliability_checks_total" in resp.text
     assert "reliability_http_requests_total" in resp.text
+
+
+def test_unknown_paths_share_one_metrics_label():
+    import app.main as m
+
+    with patch("app.main._start"):
+        client = TestClient(app)
+        client.get("/no-such-path-1")
+        client.get("/no-such-path-2")
+        client.get("/health")
+    families = {f.name: f for f in m.metrics.http_requests.collect()}
+    paths = {s.labels["path"] for s in families["reliability_http_requests"].samples}
+    assert "unmatched" in paths
+    assert "/health" in paths
+    assert not any(p.startswith("/no-such-path") for p in paths)

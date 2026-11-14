@@ -64,13 +64,13 @@ How the pieces connect:
 
 | Item | Result |
 |---|---|
-| pytest | 14 passed, 82% coverage (local, 2026-11-14) |
+| pytest | 15 passed, 82% coverage (local, 2026-11-14) |
 | ruff | clean |
 | promtool check rules | 6 rules, success |
 | promtool test rules | success (fast burn, slow burn, no-burn, crash loop, burn-rate recording rule) |
 | kubeconform | valid (CRDs skipped with -ignore-missing-schemas) |
 | terraform validate | success |
-| drills | pod kill 6s, bad deploy 45s, hey 7264/7264 at 242 req/s (p95 131ms) |
+| drills | pod kill: replacement Ready in 6s; bad deploy: undone 45s after the bad image was set (mostly the script's own waits); hey 7264/7264 at 242 req/s (p95 131ms) |
 | image size | 218MB (`reliability-lab:local`, 2026-11-14) |
 | burn-rate drill | simplified single-window fast-burn rule fired at 01:10 ET, inactive at 01:19 ET after fix (2026-11-14) |
 
@@ -92,8 +92,8 @@ The live drill pointed the checker at a URL that always returns 500. It used a *
 - kind, not EKS. CI does not deploy on `main`.
 - Image is 218MB. A multi-stage build would shrink it; not done in this pass.
 - The load test did not burn the error budget (all requests succeeded), so the alert drill used a failing target instead.
-- The Grafana screenshot shows the third panel's old label, "Error budget remaining". That panel is now "Error budget burn rate (5m)"; see docs/drills/README.md.
+- The Grafana screenshot shows the third panel's old label, "Error budget remaining". That panel is now "Error budget burn rate (5m, 1 = on budget)"; see docs/drills/README.md.
 
 ## Cost
 
-No AWS resources are created by this repo as committed. If you apply the Terraform, it creates an ECR repository, an OIDC role, an SNS topic, and a billing alarm (default $10) that notifies the topic. Set `billing_alert_email` to receive the alarm by email (AWS sends a confirmation link), or to `""` to skip the subscription. Tear down with `terraform destroy`.
+No AWS resources are created by this repo as committed. If you apply the Terraform, it creates an ECR repository, an IAM role for GitHub Actions OIDC (the account must already have the `token.actions.githubusercontent.com` OIDC provider; the module does not create it), an SNS topic, and a billing alarm (default $10) that notifies the topic. Set `billing_alert_email` to receive the alarm by email (AWS sends a confirmation link), or to `""` to skip the subscription. Tear down with `terraform destroy`.

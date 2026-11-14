@@ -8,7 +8,7 @@ Defined before the service was built. Window is 30 days.
 
 Error budget: 0.5% of checks may fail in a 30-day window.
 
-Each pod runs its own checker loop. With the defaults in `k8s/configmap.yaml` (one round every 30 seconds, 2 targets), one pod makes 2,880 rounds × 2 targets = **5,760 checks per day**. 0.5% of that is about **28.8 failed checks per day** per pod before the budget is spent at an even rate.
+Each pod runs its own checker loop. With the defaults in `k8s/configmap.yaml` (`INTERVAL_SECONDS: 30`, 2 targets), one pod makes at most 2,880 rounds × 2 targets = **5,760 checks per day**. (The loop sleeps 30 seconds after each round, so the real count is slightly lower by the time the checks themselves take.) 0.5% of that is about **28.8 failed checks per day** per pod before the budget is spent at an even rate.
 
 The Deployment runs 2 replicas, and each replica checks the same targets independently, so the cluster as a whole records about 11,520 checks per day (about 57.6 allowed failures per day). The SLO is a ratio, so the replica count does not change the 0.5% budget; it only changes the absolute counts.
 

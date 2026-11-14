@@ -26,5 +26,5 @@ The pod was deleted on purpose. The Deployment's ReplicaSet saw one pod missing 
 
 ## Action items
 
-- Run the bad-deploy drill (done: 45s to undo) to prove a bad image does not take the service down.
+- Run the bad-deploy drill to show a bad image does not replace the running pods (done: undone 45s after the bad image was set; the original pods stayed up because of `maxUnavailable: 0`. No traffic was measured).
 - Add a Grafana screenshot of pod restarts on a future run.

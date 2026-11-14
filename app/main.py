@@ -50,7 +50,10 @@ async def _measure(request: Request, call_next):
     start = time.perf_counter()
     response = await call_next(request)
     elapsed = time.perf_counter() - start
-    path = request.url.path
+    # Label by route template, not the raw URL, so unknown paths (scanners,
+    # typos) cannot create unbounded label values.
+    route = request.scope.get("route")
+    path = getattr(route, "path", "unmatched")
     metrics.http_requests.labels(method=request.method, path=path, status=str(response.status_code)).inc()
     metrics.http_latency.labels(method=request.method, path=path).observe(elapsed)
     return response

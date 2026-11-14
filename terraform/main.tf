@@ -1,4 +1,6 @@
-# Validate/plan only in CI; not applied.
+# CI runs fmt -check, init -backend=false, and validate only; this is not applied.
+# The GitHub OIDC role trusts the account's existing
+# token.actions.githubusercontent.com OIDC provider; this module does not create it.
 
 terraform {
   required_version = ">= 1.5.0"

@@ -9,10 +9,11 @@ Run on a laptop (kind, 2026-11-14).
 
 ## Bad deploy
 
-- Bad image set at 05:09:02 UTC
-- Rollout timed out (expected: the new pods never became ready)
-- Undo complete at 05:09:47 UTC
-- Recover: **45s**
+- Bad image set at 05:09:02 UTC (00:09:02 ET)
+- Rollout timed out (expected: the new pod never became ready)
+- Undo complete at 05:09:47 UTC (00:09:47 ET)
+- Bad image to undo complete: **45s**. Most of that is the script's own waits (`sleep 15` plus the 30s `rollout status` timeout); the undo itself was near-instant.
+- Because the Deployment uses `maxUnavailable: 0`, Kubernetes keeps the two original pods until a new pod is Ready, so the bad image never replaced them. No traffic was sent during this drill, so availability was not measured directly.
 
 ## Overload
 
