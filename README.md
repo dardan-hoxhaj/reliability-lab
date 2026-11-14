@@ -13,6 +13,8 @@ Status: code, tests, CI, and manifests are written. Drills have not been run (th
 
 ## Architecture
 
+![Architecture](docs/architecture.png)
+
 ```mermaid
 flowchart LR
   targets[Target URLs] --> checker[Checker loop]
