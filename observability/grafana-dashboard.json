@@ -1,0 +1,31 @@
+{
+  "title": "reliability-lab",
+  "uid": "reliability-lab",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Check success rate (5m)",
+      "targets": [{"expr": "reliability:checks_success_ratio:rate5m"}],
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "HTTP latency p95 (5m)",
+      "targets": [{"expr": "reliability:http_latency_p95:rate5m"}],
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "Error budget remaining",
+      "targets": [{"expr": "reliability:error_budget_remaining:ratio"}],
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "Pod restarts (15m)",
+      "targets": [{"expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"reliability-lab\"}[15m]))"}],
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+    }
+  ]
+}

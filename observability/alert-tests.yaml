@@ -1,0 +1,35 @@
+rule_files:
+  - alert-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'reliability_checks_total{result="failure"}'
+        values: '0+10x60'
+      - series: 'reliability_checks_total{result="success"}'
+        values: '0+10x60'
+      - series: 'kube_pod_container_status_restarts_total{namespace="reliability-lab"}'
+        values: '0+1x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ReliabilityErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+            exp_annotations:
+              summary: "Check success rate is burning the error budget fast"
+              runbook: "docs/RUNBOOK.md#reliabilityerrorbudgetfastburn"
+      - eval_time: 5m
+        alertname: ReliabilityPodCrashLoop
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ReliabilityPodCrashLoop
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              namespace: reliability-lab
+            exp_annotations:
+              summary: "A reliability pod is crash-looping"
+              runbook: "docs/RUNBOOK.md#reliabilitypodcrashloop"

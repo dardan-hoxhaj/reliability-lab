@@ -1,0 +1,84 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check app tests
+      - run: PYTHONPATH=. pytest -q --cov=app --cov-report=term-missing
+
+  docker-trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: docker/setup-buildx-action@v3.7.1
+      - run: docker build -t reliability-lab:ci .
+      - uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: reliability-lab:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+  promtool:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Install promtool
+        run: |
+          curl -fsSL -o /tmp/prom.tgz https://github.com/prometheus/prometheus/releases/download/v2.55.1/prometheus-2.55.1.linux-amd64.tar.gz
+          tar -xzf /tmp/prom.tgz -C /tmp
+          sudo cp /tmp/prometheus-2.55.1.linux-amd64/promtool /usr/local/bin/promtool
+      - run: promtool check rules observability/alert-rules.yaml observability/recording-rules.yaml
+      - working-directory: observability
+        run: promtool test rules alert-tests.yaml
+
+  kubeconform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Install kubeconform
+        run: |
+          curl -fsSL -o /tmp/kc.tgz https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz
+          tar -xzf /tmp/kc.tgz -C /tmp
+          sudo mv /tmp/kubeconform /usr/local/bin/kubeconform
+      - run: kubeconform -summary -kubernetes-version 1.30.0 k8s/
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2.3.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: hashicorp/setup-terraform@v3.1.2
+        with:
+          terraform_version: "1.9.8"
+      - working-directory: terraform
+        run: terraform fmt -check
+      - working-directory: terraform
+        run: terraform init -backend=false
+      - working-directory: terraform
+        run: terraform validate
