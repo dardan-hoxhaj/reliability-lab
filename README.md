@@ -56,14 +56,14 @@ make demo
 | terraform validate | success |
 | drills | pod kill 6s, bad deploy 45s, hey 7264/7264 at 242 req/s (p95 131ms) |
 | image size | 218MB (`reliability-lab:local`, 2026-11-14) |
-| AWS | not applied |
+| burn-rate alert | fired at 01:10 ET, inactive at 01:19 ET after fix (2026-11-14) |
 
 ## Limitations
 
 - Terraform is validate-only. No `terraform apply`. No remote state.
 - kind, not EKS. CI does not deploy on `main`.
 - Image is 218MB. A multi-stage build would shrink it; not done in this pass.
-- The burn-rate alert did not fire. The load test hit a healthy `/health`, so every request succeeded. That is the correct result, not a missed alert.
+- The load test did not burn the error budget (all requests succeeded). The burn-rate alert was proven separately with a failing target: ReliabilityErrorBudgetFastBurn fired and recovered (see docs/drills/README.md).
 - Grafana screenshot is in `docs/drills/grafana-dashboard.png`.
 
 ![Grafana](docs/drills/grafana-dashboard.png)
