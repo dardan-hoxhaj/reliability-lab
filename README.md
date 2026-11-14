@@ -68,7 +68,7 @@ How the pieces connect:
 | ruff | clean |
 | promtool check rules | 6 rules, success |
 | promtool test rules | success (fast burn, slow burn, no-burn, crash loop, burn-rate recording rule) |
-| kubeconform | valid (CRDs skipped with -ignore-missing-schemas) |
+| kubeconform | 6 valid, 0 invalid; 2 CRD objects (ServiceMonitor, PrometheusRule) skipped with -ignore-missing-schemas |
 | terraform validate | success |
 | drills | pod kill: replacement Ready in 6s; bad deploy: undone 45s after the bad image was set (mostly the script's own waits); hey 7264/7264 at 242 req/s (p95 131ms) |
 | image size | 218MB (`reliability-lab:local`, 2026-11-14) |
