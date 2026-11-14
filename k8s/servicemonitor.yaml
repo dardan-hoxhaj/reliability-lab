@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: reliability
+  namespace: reliability-lab
+  labels:
+    release: mon
+spec:
+  selector:
+    matchLabels:
+      app: reliability
+  endpoints:
+    - port: http
+      path: /metrics

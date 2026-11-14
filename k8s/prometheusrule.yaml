@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: reliability
+  namespace: reliability-lab
+  labels:
+    release: mon
+spec:
+  groups:
+    - name: reliability-recording
+      interval: 30s
+      rules:
+        - record: reliability:checks_success_ratio:rate5m
+          expr: |
+            sum(rate(reliability_checks_total{result="success"}[5m]))
+            /
+            sum(rate(reliability_checks_total[5m]))
+        - record: reliability:http_latency_p95:rate5m
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(reliability_http_request_latency_seconds_bucket[5m])))
+        - record: reliability:error_budget_remaining:ratio
+          expr: |
+            1 - ((1 - reliability:checks_success_ratio:rate5m) / (1 - 0.995))
+    - name: reliability-alerts
+      rules:
+        - alert: ReliabilityPodCrashLoop
+          expr: increase(kube_pod_container_status_restarts_total{namespace="reliability-lab"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: page
+          annotations:
+            summary: A reliability pod is crash-looping
