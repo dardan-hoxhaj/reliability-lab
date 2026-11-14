@@ -1,4 +1,4 @@
-# Validate only in CI; not applied.
+# Validate/plan only in CI; not applied.
 
 terraform {
   required_version = ">= 1.5.0"
@@ -28,6 +28,11 @@ variable "aws_region" {
 variable "billing_alarm_threshold_usd" {
   type    = number
   default = 10
+}
+
+variable "billing_alert_email" {
+  type        = string
+  description = "Email address subscribed to the billing alarm topic. Set to an empty string to skip the subscription. AWS sends a confirmation email that must be accepted."
 }
 
 provider "aws" {
@@ -93,6 +98,19 @@ resource "aws_iam_role_policy" "ecr_push" {
   policy = data.aws_iam_policy_document.ecr_push.json
 }
 
+# Billing metrics are published only in us-east-1, so keep aws_region there.
+resource "aws_sns_topic" "billing" {
+  name = "reliability-lab-billing"
+  tags = { project = "reliability-lab" }
+}
+
+resource "aws_sns_topic_subscription" "billing_email" {
+  count     = var.billing_alert_email == "" ? 0 : 1
+  topic_arn = aws_sns_topic.billing.arn
+  protocol  = "email"
+  endpoint  = var.billing_alert_email
+}
+
 resource "aws_cloudwatch_metric_alarm" "billing" {
   alarm_name          = "reliability-lab-billing"
   comparison_operator = "GreaterThanThreshold"
@@ -102,7 +120,8 @@ resource "aws_cloudwatch_metric_alarm" "billing" {
   period              = 21600
   statistic           = "Maximum"
   threshold           = var.billing_alarm_threshold_usd
-  alarm_description   = "Billing alarm for the reliability-lab account. Create this before any apply."
+  alarm_description   = "Estimated charges for the account exceeded the threshold."
+  alarm_actions       = [aws_sns_topic.billing.arn]
   dimensions = {
     Currency = "USD"
   }
@@ -110,6 +129,10 @@ resource "aws_cloudwatch_metric_alarm" "billing" {
 
 output "ecr_repository_url" {
   value = aws_ecr_repository.reliability.repository_url
+}
+
+output "billing_sns_topic_arn" {
+  value = aws_sns_topic.billing.arn
 }
 
 output "github_oidc_role_arn" {

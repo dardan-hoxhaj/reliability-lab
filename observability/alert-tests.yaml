@@ -1,9 +1,11 @@
 rule_files:
   - alert-rules.yaml
+  - recording-rules.yaml
 
 evaluation_interval: 1m
 
 tests:
+  # 50% of checks fail: fast burn pages, crash-loop rule fires on restarts.
   - interval: 1m
     input_series:
       - series: 'reliability_checks_total{result="failure"}'
@@ -33,3 +35,57 @@ tests:
             exp_annotations:
               summary: "A reliability pod is crash-looping"
               runbook: "docs/RUNBOOK.md#reliabilitypodcrashloop"
+    promql_expr_test:
+      # 50% failure / 0.5% budget = 100x burn rate.
+      - expr: round(reliability:error_budget_burn_rate:ratio_rate5m)
+        eval_time: 10m
+        exp_samples:
+          - labels: '{}'
+            value: 100
+
+  # 5% of checks fail: above the 6x slow-burn line (3%), below the 14.4x
+  # fast-burn line (7.2%). Slow burn opens a ticket after 15m; no page.
+  - interval: 1m
+    input_series:
+      - series: 'reliability_checks_total{result="failure"}'
+        values: '0+1x420'
+      - series: 'reliability_checks_total{result="success"}'
+        values: '0+19x420'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ReliabilityErrorBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: ReliabilityErrorBudgetSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+            exp_annotations:
+              summary: "Check success rate is burning the error budget slowly"
+              runbook: "docs/RUNBOOK.md#reliabilityerrorbudgetslowburn"
+      - eval_time: 6h30m
+        alertname: ReliabilityErrorBudgetSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+            exp_annotations:
+              summary: "Check success rate is burning the error budget slowly"
+              runbook: "docs/RUNBOOK.md#reliabilityerrorbudgetslowburn"
+      - eval_time: 30m
+        alertname: ReliabilityErrorBudgetFastBurn
+        exp_alerts: []
+
+  # No failures: neither burn alert fires.
+  - interval: 1m
+    input_series:
+      - series: 'reliability_checks_total{result="failure"}'
+        values: '0x120'
+      - series: 'reliability_checks_total{result="success"}'
+        values: '0+20x120'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: ReliabilityErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 90m
+        alertname: ReliabilityErrorBudgetSlowBurn
+        exp_alerts: []

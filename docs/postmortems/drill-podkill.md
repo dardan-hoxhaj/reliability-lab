@@ -13,7 +13,7 @@ One of two replicas was down for about 6 seconds. The Service kept the other rep
 
 ## Root cause
 
-The pod was deleted on purpose. Kubernetes created a replacement. The Deployment's `replicas: 2` and the rolling update settings meant the other pod stayed up.
+The pod was deleted on purpose. The Deployment's ReplicaSet saw one pod missing from `replicas: 2` and created a replacement. The second replica was never touched and kept serving behind the Service the whole time. The Deployment's rolling-update settings played no part: they apply when the pod template changes, not when a pod is deleted.
 
 ## What went well
 

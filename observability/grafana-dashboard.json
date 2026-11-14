@@ -17,8 +17,8 @@
     },
     {
       "type": "stat",
-      "title": "Error budget remaining",
-      "targets": [{"expr": "reliability:error_budget_remaining:ratio"}],
+      "title": "Error budget burn rate (5m, 1 = on budget)",
+      "targets": [{"expr": "reliability:error_budget_burn_rate:ratio_rate5m"}],
       "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
     },
     {

@@ -18,9 +18,11 @@ spec:
         - record: reliability:http_latency_p95:rate5m
           expr: |
             histogram_quantile(0.95, sum by (le) (rate(reliability_http_request_latency_seconds_bucket[5m])))
-        - record: reliability:error_budget_remaining:ratio
+        # 5m error-budget burn rate. 1 = on budget, 14.4 = fast-burn threshold.
+        - record: reliability:error_budget_burn_rate:ratio_rate5m
           expr: |
-            1 - ((1 - reliability:checks_success_ratio:rate5m) / (1 - 0.995))
+            (1 - reliability:checks_success_ratio:rate5m)
+            / (1 - 0.995)
     - name: reliability-alerts
       rules:
         - alert: ReliabilityErrorBudgetFastBurn
