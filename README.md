@@ -54,7 +54,7 @@ make demo
 | promtool test rules | success |
 | kubeconform | 6/6 valid |
 | terraform validate | success |
-| drills | pod kill 6s, bad deploy 45s, load 100/100 at 2-8ms (2026-11-14) |
+| drills | pod kill 6s, bad deploy 45s, hey 7264/7264 at 242 req/s (p95 131ms) |
 | image size | 218MB (`reliability-lab:local`, 2026-11-14) |
 | AWS | not applied |
 

@@ -16,10 +16,19 @@ Run on a laptop (kind, 2026-11-14).
 
 ## Overload
 
-- Tool: curl loop, 100 requests (`hey` was not installed)
-- Result: 100/100 HTTP 200
-- Latency: about 2–8 ms
-- Burn-rate alert: did not fire. This was a light load, not enough to burn the error budget. A real overload needs `hey` or `k6` at higher concurrency.
+- Tool: `hey -z 30s -c 20` against `/health` (2026-11-14)
+- Result: 7264 requests, all HTTP 200, 241.6 req/s
+- Latency: average 83 ms, p95 131 ms, slowest 260 ms
+- Burn-rate alert: did not fire. Every request succeeded, so the error budget was not burned. That is the correct outcome for a healthy service under load.
+
+## Grafana (same session)
+
+Dashboard `reliability-lab` after Prometheus scrape:
+
+- Check success rate (5m): 1
+- HTTP latency p95 (5m): 0.0095 s
+- Error budget remaining: 1
+- Pod restarts (15m): 0
 
 ## Honest gaps
 
