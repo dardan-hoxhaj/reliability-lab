@@ -82,6 +82,15 @@ The live drill pointed the checker at a URL that always returns 500. It used a *
 
 [Grafana dashboard](docs/drills/grafana-dashboard.png) · [Alert recovered](docs/drills/alert-recovered.png) · [Pod-kill postmortem](docs/postmortems/drill-podkill.md) · [Runbook](docs/RUNBOOK.md)
 
+## What broke and how I fixed it
+
+- **Alert rules were missing from the cluster.** The burn-rate alerts lived in `observability/alert-rules.yaml` and passed promtool, but `k8s/prometheusrule.yaml` did not include them, so `make deploy` installed a PrometheusRule with no burn-rate alerts. Fix: added them to the manifest and added `tests/test_prometheusrule_sync.py`, which fails if the two files drift apart.
+- **CI failed on the CRDs.** kubeconform has no schema for `ServiceMonitor` and `PrometheusRule` (they are CRDs, custom resource types that kube-prometheus-stack installs), so it marked them invalid. Fix: `-ignore-missing-schemas` in CI, and `make up` installs the Helm chart before `make deploy` applies those objects, so the types exist on the cluster.
+- **Trivy found Starlette CVEs.** Fix: bumped `fastapi`, which pulls a patched Starlette.
+- **Metrics could grow without limit.** HTTP metrics were labelled with the raw URL path, so every scanner or typo URL created a new time series. Fix: label by route template and put unknown paths under `unmatched`, with a test.
+- **A metric had the wrong name.** `error_budget_remaining` was really a 5-minute burn rate. Fix: renamed it to `error_budget_burn_rate:ratio_rate5m` in the rules, manifest, dashboard, docs, and tests. The old screenshot still shows the old label (see Limitations).
+- **`.coverage` was committed.** Fix: removed it and added it to `.gitignore`.
+
 ## Limitations
 
 - The live alert drill used a simplified single-window fast-burn rule. A re-run with the committed multi-window rule is pending.
@@ -97,3 +106,13 @@ The live drill pointed the checker at a URL that always returns 500. It used a *
 ## Cost
 
 No AWS resources are created by this repo as committed. If you apply the Terraform, it creates an ECR repository, an IAM role for GitHub Actions OIDC (the account must already have the `token.actions.githubusercontent.com` OIDC provider; the module does not create it), an SNS topic, and a billing alarm (default $10) that notifies the topic. Set `billing_alert_email` to receive the alarm by email (AWS sends a confirmation link), or to `""` to skip the subscription. Tear down with `terraform destroy`.
+
+## Teardown
+
+```bash
+make down              # kind delete cluster
+kind get clusters      # should not list the reliability-lab cluster
+docker ps              # no kind node containers left
+```
+
+If you applied the Terraform: `terraform destroy`, then check the ECR repository and SNS topic are gone in the AWS console.
